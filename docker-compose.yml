@@ -1,0 +1,143 @@
+version: '3.5'
+
+services:
+  hydra2:
+    container_name: hydra2
+    environment:
+      PGID: ${PGID}
+      PUID: ${PUID}
+      TZ: ${TZ}
+    image: linuxserver/hydra2
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=web"
+      - "traefik.basic.frontend.rule=Host:hydra2.maartenzuidland.nl"
+    networks:
+        - web
+    ports:
+      - '5076:5076'
+    restart: unless-stopped
+    volumes:
+      - '${hydra_config}:/config'
+      - '${downloads}:/downloads'
+  nzbget:
+    container_name: nzbget
+    environment:
+      PGID: ${PGID}
+      PUID: ${PUID}
+      TZ: ${TZ}
+    image: linuxserver/nzbget
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=web"
+      - "traefik.basic.frontend.rule=Host:nzbget.maartenzuidland.nl"
+    networks:
+        - web
+    ports:
+      - '6789:6789'
+    restart: unless-stopped
+    volumes:
+      - '${nzbget_config}:/config'
+      - '${downloads}:/downloads'
+      - '${main_drive}:/Volumes/My Book'
+  sonarr:
+    container_name: sonarr
+    depends_on:
+      - hydra2
+      - nzbget
+    links:
+      - hydra2
+      - nzbget
+    environment:
+      PGID: ${PGID}
+      PUID: ${PUID}
+      TZ: ${TZ}
+    image: linuxserver/sonarr:preview
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=web"
+      - "traefik.basic.frontend.rule=Host:sonarr.maartenzuidland.nl"
+    networks:
+        - web
+    ports:
+      - '8989:8989'
+    restart: unless-stopped
+    volumes:
+      - '${sonarr_config}:/config'
+      - '${downloads}:/downloads'
+      - '${tv}:/tv'
+      - '${main_drive}:/Volumes/My Book'
+  radarr:
+    container_name: radarr
+    depends_on:
+      - hydra2
+      - nzbget
+    links:
+      - hydra2
+      - nzbget
+    environment:
+      PGID: ${PGID}
+      PUID: ${PUID}
+      TZ: ${TZ}
+    image: linuxserver/radarr
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=web"
+      - "traefik.basic.frontend.rule=Host:radarr.maartenzuidland.nl"
+    networks:
+        - web
+    ports:
+      - '7878:7878'
+    restart: unless-stopped
+    volumes:
+      - '${radarr_config}:/config'
+      - '${downloads}:/downloads'
+      - '${movies}:/movies'
+      - '${main_drive}:/Volumes/My Book'
+  ombi:
+    image: linuxserver/ombi
+    container_name: ombi
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=web"
+      - "traefik.basic.frontend.rule=Host:ombi.maartenzuidland.nl"
+    environment:
+      PGID: ${PGID}
+      PUID: ${PUID}
+      TZ: ${TZ}
+    networks:
+      - web
+    volumes:
+      - '${ombi_config}:/config'
+    ports:
+      - 3579:3579
+    restart: unless-stopped
+  
+  traefik:
+    container_name: traefik
+    command: --api --docker
+    image: traefik
+    restart: always
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=web"
+      - "traefik.basic.frontend.rule=Host:traefik.maartenzuidland.nl"
+    environment:
+      - TRANSIP_ACCOUNT_NAME=${TRANSIP_ACCOUNT_NAME}
+      - TRANSIP_PRIVATE_KEY_PATH=${TRANSIP_PRIVATE_KEY_PATH}
+    volumes:
+      - '${traefik_config}/traefik.toml:/traefik.toml'
+      - '${traefik_config}/acme.json:/acme.json'
+      - '${traefik_config}/transip.key:/etc/traefik/acme/transip.key'
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - 80:80
+      - 443:443
+      - 8080:8080
+    networks:
+        - web
+
+networks:
+    web:
+        driver: bridge
+        name: web
