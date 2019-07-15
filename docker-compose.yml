@@ -79,7 +79,7 @@ services:
       PGID: ${PGID}
       PUID: ${PUID}
       TZ: ${TZ}
-    image: linuxserver/radarr:preview
+    image: linuxserver/radarr
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=web"
