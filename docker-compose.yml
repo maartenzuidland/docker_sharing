@@ -10,8 +10,6 @@ services:
     image: linuxserver/hydra2
     labels:
       - "traefik.enable=true"
-      - "traefik.docker.network=web"
-      - "traefik.basic.frontend.rule=Host:hydra2.maartenzuidland.nl"
     networks:
         - web
     ports:
@@ -29,8 +27,6 @@ services:
     image: linuxserver/nzbget
     labels:
       - "traefik.enable=true"
-      - "traefik.docker.network=web"
-      - "traefik.basic.frontend.rule=Host:nzbget.maartenzuidland.nl"
     networks:
         - web
     ports:
@@ -55,8 +51,6 @@ services:
     image: linuxserver/sonarr:preview
     labels:
       - "traefik.enable=true"
-      - "traefik.docker.network=web"
-      - "traefik.basic.frontend.rule=Host:sonarr.maartenzuidland.nl"
     networks:
         - web
     ports:
@@ -82,8 +76,6 @@ services:
     image: linuxserver/radarr
     labels:
       - "traefik.enable=true"
-      - "traefik.docker.network=web"
-      - "traefik.basic.frontend.rule=Host:radarr.maartenzuidland.nl"
     networks:
         - web
     ports:
@@ -99,8 +91,6 @@ services:
     container_name: ombi
     labels:
       - "traefik.enable=true"
-      - "traefik.docker.network=web"
-      - "traefik.basic.frontend.rule=Host:ombi.maartenzuidland.nl"
     environment:
       PGID: ${PGID}
       PUID: ${PUID}
@@ -113,29 +103,43 @@ services:
       - 3579:3579
     restart: unless-stopped
   
-  traefik:
-    container_name: traefik
-    command: --api --docker
-    image: traefik
-    restart: always
-    labels:
-      - "traefik.enable=true"
-      - "traefik.docker.network=web"
-      - "traefik.basic.frontend.rule=Host:traefik.maartenzuidland.nl"
+  traefikv2:
+    # The official v2.0 Traefik docker image
+    image: traefik:v2.0
+    container_name: "traefikv2"
+    # Enables the web UI and tells Traefik to listen to docker
+    command: 
+      - "--api"
+      - "--api-dashboard"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--providers.docker.network=web"
+      = "--providers.docker.defaultRule=Host('{{ .Name }}.maartenzuidland.nl')"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--certificatesresolvers.mydnschallenge.acme.dnschallenge=true"
+      - "--certificatesresolvers.mydnschallenge.acme.dnschallenge.provider=transip"
+      #- "--certificatesresolvers.mydnschallenge.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory"
+      - "--certificatesresolvers.mydnschallenge.acme.email=maarten.zuidland@gmail.com"
+      - "--certificatesresolvers.mydnschallenge.acme.storage=/letsencrypt/acme.json"
     environment:
       - TRANSIP_ACCOUNT_NAME=${TRANSIP_ACCOUNT_NAME}
-      - TRANSIP_PRIVATE_KEY_PATH=${TRANSIP_PRIVATE_KEY_PATH}
-    volumes:
-      - '${traefik_config}/traefik.toml:/traefik.toml'
-      - '${traefik_config}/acme.json:/acme.json'
-      - '${traefik_config}/transip.key:/etc/traefik/acme/transip.key'
-      - /var/run/docker.sock:/var/run/docker.sock
+      - TRANSIP_PRIVATE_KEY_PATH=/transip.key
     ports:
-      - 80:80
-      - 443:443
-      - 8082:8080
+      # The HTTP port
+      - "80:80"
+      - "443:443"
+      # The Web UI (enabled by --api)
+      - "8080:8080"
+    volumes:
+      # So that Traefik can listen to the Docker events
+      - /var/run/docker.sock:/var/run/docker.sock
+      - '${traefik_config}/letsencrypt:/letsencrypt'
+      # - '${traefik_config}/traefik.toml:/traefik.toml'
+      - '${traefik_config}/transip.key:/transip.key'
     networks:
-        - web
+      - web
+    restart: unless-stopped
 
 networks:
     web:
