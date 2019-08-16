@@ -110,11 +110,10 @@ services:
     # Enables the web UI and tells Traefik to listen to docker
     command: 
       - "--api"
-      - "--api-dashboard"
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
       - "--providers.docker.network=web"
-      = "--providers.docker.defaultRule=Host('{{ .Name }}.maartenzuidland.nl')"
+      - --providers.docker.defaultRule=Host('{{ regexSplit "\_" .Name 1 }}.maartenzuidland.nl')
       - "--entrypoints.web.address=:80"
       - "--entrypoints.websecure.address=:443"
       - "--certificatesresolvers.mydnschallenge.acme.dnschallenge=true"
