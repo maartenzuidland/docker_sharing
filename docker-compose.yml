@@ -34,7 +34,7 @@ services:
     networks:
         - web
     ports:
-      - '6789:6789'
+      - '6788:6789'
     restart: unless-stopped
     volumes:
       - '${nzbget_config}:/config'
@@ -133,7 +133,7 @@ services:
     ports:
       - 80:80
       - 443:443
-      - 8080:8080
+      - 8082:8080
     networks:
         - web
 
