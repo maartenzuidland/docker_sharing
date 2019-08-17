@@ -112,6 +112,36 @@ services:
     ports:
       - 3579:3579
     restart: unless-stopped
+
+  nextclouddb:
+    image: mariadb
+    container_name: nextclouddb
+    command: --transaction-isolation=READ-COMMITTED --binlog-format=ROW
+    restart: unless-stopped
+    volumes:
+      - '${nextcloud_config}/mysql:/var/lib/mysql'
+    environment:
+      - MYSQL_ROOT_PASSWORD=Drunen_11!
+      - MYSQL_PASSWORD=Drunen_11!
+      - MYSQL_DATABASE=nextcloud
+      - MYSQL_USER=nextcloud
+  nextcloud:
+    image: nextcloud
+    container_name: nextcloud
+    links:
+      - nextclouddb
+    ports: 
+      - 8089:80
+    volumes:
+      - '${main_drive}:/Volumes/My Book'
+      - '${nextcloud_config}/www:/var/www/html'
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=web"
+      - "traefik.basic.frontend.rule=Host:nextcloud.maartenzuidland.nl"
+    networks: 
+      - web
   
   traefik:
     container_name: traefik
