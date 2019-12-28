@@ -2,9 +2,9 @@ version: '3.5'
 
 secrets:
   transip_account:
-    file: ./.secrets/transip_account.secret
+    file: /home/maarten/docker_config/container_config/traefik2/.secrets/transip_account.secret
   transip_private_key:
-    file: ./.secrets/transip_key.secret
+    file: /home/maarten/docker_config/container_config/traefik2/.secrets/transip_key.secret
 
 services:
   hydra2:
@@ -104,6 +104,36 @@ services:
       - '${downloads}:/downloads'
       - '${movies}:/movies'
       - '${main_drive}:/Volumes/My Book'
+  bazarr:
+    container_name: bazarr
+    depends_on:
+      - radarr
+      - sonarr
+      - nzbget
+    links:
+      - radarr
+      - sonarr
+      - nzbget
+    environment:
+      PUID: ${PUID}
+      PGID: ${PGID}
+      TZ: ${TZ} 
+    image: linuxserver/bazarr
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.bazarr.rule=Host(`bazarr.maartenzuidland.nl`)"
+      - "traefik.http.routers.bazarr.entrypoints=websecure"
+      - "traefik.http.routers.bazarr.tls.certresolver=mydnschallenge"
+    networks:
+      - web
+    ports:
+      - 6767:6767
+    restart: unless-stopped
+    volumes:
+      - '${bazarr_config}:/config'
+      - '${movies}:/movies'
+      - '${tv}:/tv'
+      - '${main_drive}:/Volumes/My Book'
   ombi:
     image: linuxserver/ombi
     container_name: ombi
@@ -124,82 +154,9 @@ services:
       - 3579:3579
     restart: unless-stopped
 
-  nextclouddb:
-    image: mariadb
-    container_name: nextclouddb
-    command: --transaction-isolation=READ-COMMITTED --binlog-format=ROW
-    restart: unless-stopped
-    ports:
-      - 3306:3306
-    networks:
-      - internal
-    volumes:
-      - '${nextcloud_config}/mysql:/var/lib/mysql'
-    environment:
-      - MYSQL_ROOT_PASSWORD=Drunen_11!
-      - MYSQL_PASSWORD=Drunen_11!
-      - MYSQL_DATABASE=nextcloud
-      - MYSQL_USER=nextcloud
-  
-  nextcloud:
-    image: nextcloud
-    container_name: nextcloud
-    ports: 
-      - 8089:80
-    volumes:
-      - '${main_drive}:/Volumes/My Book'
-      - '${nextcloud_config}/www:/var/www/html'
-    restart: unless-stopped
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.nextcloud.rule=Host(`nextcloud.maartenzuidland.nl`)"
-      - "traefik.http.routers.nextcloud.entrypoints=websecure"
-      - "traefik.http.routers.nextcloud.tls.certresolver=mydnschallenge"
-    networks: 
-      - web
-      - internal
-  
-#  traefik:
-#    container_name: traefik
-#    command: --api --docker
-#    image: traefik:v1.7
-#    restart: always
-#    labels:
-#      - "traefik.enable=true"
-#      - "traefik.docker.network=web"
-#      - "traefik.basic.frontend.rule=Host:traefik.maartenzuidland.nl"
-#    environment:
-#      - TRANSIP_ACCOUNT_NAME=${TRANSIP_ACCOUNT_NAME}
-#      - TRANSIP_PRIVATE_KEY_PATH=${TRANSIP_PRIVATE_KEY_PATH}
-#    volumes:
-#      - '${traefik_config}/traefik.toml:/traefik.toml'
-#      - '${traefik_config}/acme.json:/acme.json'
-#      - '${traefik_config}/transip.key:/etc/traefik/acme/transip.key'
-#      - /var/run/docker.sock:/var/run/docker.sock
-#    ports:
-#      - 80:80
-#      - 443:443
-#      - 8082:8080
-#    networks:
-#        - web
   traefik2:
-    image: "traefik:v2.0.0"
+    image: "traefik:v2.0"
     container_name: "traefik2"
-    command:
-      - "--global.sendAnonymousUsage"
-      - "--log.level=DEBUG"
-      - "--api.insecure=true"
-      - "--providers.docker=true"
-      - "--providers.docker.exposedbydefault=false"
-      - "--entrypoints.web.address=:80"
-      - "--entrypoints.websecure.address=:443"
-      - "--certificatesResolvers.mydnschallenge.acme.tlsChallenge=false"
-      - "--certificatesResolvers.mydnschallenge.acme.httpChallenge=false"
-      - "--certificatesresolvers.mydnschallenge.acme.dnschallenge=true"
-      - "--certificatesresolvers.mydnschallenge.acme.dnschallenge.provider=transip"
-      #- "--certificatesresolvers.mydnschallenge.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory"
-      - "--certificatesresolvers.mydnschallenge.acme.email=maarten.zuidland@gmail.com"
-      - "--certificatesresolvers.mydnschallenge.acme.storage=/letsencrypt/acme.json"
     ports:
       - "80:80"
       - "443:443"
@@ -211,13 +168,14 @@ services:
       - "TRANSIP_ACCOUNT_NAME_FILE=/run/secrets/transip_account"
       - "TRANSIP_PRIVATE_KEY_PATH=/run/secrets/transip_private_key"
     volumes:
+      - "${traefik2_config}/traefik.yml:/etc/traefik/traefik.yml"
       - "${traefik2_config}/letsencrypt:/letsencrypt"
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    networks:
+      - web
+    restart: unless-stopped
 
 networks:
     web:
         driver: bridge
         name: web
-    internal:
-        external: false
-        name: internal
