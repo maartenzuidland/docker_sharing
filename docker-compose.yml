@@ -2,9 +2,9 @@ version: '3.5'
 
 secrets:
   transip_account:
-    file: /home/maarten/docker_config/container_config/traefik2/.secrets/transip_account.secret
+    file: /home/maarten/docker/container_config/traefik2/.secrets/transip_account.secret
   transip_private_key:
-    file: /home/maarten/docker_config/container_config/traefik2/.secrets/transip_key.secret
+    file: /home/maarten/docker/container_config/traefik2/.secrets/transip_key.secret
 
 services:
   hydra2:
@@ -154,6 +154,27 @@ services:
       - 3579:3579
     restart: unless-stopped
 
+  tautulli:
+    image: linuxserver/tautulli
+    container_name: tautulli
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.hydra2.rule=Host(`tautulli.maartenzuidland.nl`)"
+      - "traefik.http.routers.hydra2.entrypoints=websecure"
+      - "traefik.http.routers.hydra2.tls.certresolver=mydnschallenge"
+    networks:
+      - web
+    volumes:
+      - ${tautulli_config}:/config
+      - ${plex_logs}:/logs
+    ports:
+      - 8181:8181
+    restart: unless-stopped
+  
   traefik2:
     image: "traefik:v2.0"
     container_name: "traefik2"
