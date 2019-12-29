@@ -153,7 +153,6 @@ services:
     ports:
       - 3579:3579
     restart: unless-stopped
-
   traefik2:
     image: "traefik:v2.0"
     container_name: "traefik2"
@@ -171,6 +170,7 @@ services:
       - "${traefik2_config}/traefik.yml:/etc/traefik/traefik.yml"
       - "${traefik2_config}/letsencrypt:/letsencrypt"
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
+
     networks:
       - web
     restart: unless-stopped
