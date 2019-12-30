@@ -48,6 +48,7 @@ services:
       - '${nzbget_config}:/config'
       - '${downloads}:/downloads'
       - '${main_drive}:/Volumes/My Book'
+
   sonarr:
     container_name: sonarr
     depends_on:
@@ -134,6 +135,7 @@ services:
       - '${movies}:/movies'
       - '${tv}:/tv'
       - '${main_drive}:/Volumes/My Book'
+
   ombi:
     image: linuxserver/ombi
     container_name: ombi
@@ -163,9 +165,9 @@ services:
       - TZ=${TZ}
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.hydra2.rule=Host(`tautulli.maartenzuidland.nl`)"
-      - "traefik.http.routers.hydra2.entrypoints=websecure"
-      - "traefik.http.routers.hydra2.tls.certresolver=mydnschallenge"
+      - "traefik.http.routers.tautulli.rule=Host(`tautulli.maartenzuidland.nl`)"
+      - "traefik.http.routers.tautulli.entrypoints=websecure"
+      - "traefik.http.routers.tautulli.tls.certresolver=mydnschallenge"
     networks:
       - web
     volumes:
@@ -192,7 +194,6 @@ services:
       - "${traefik2_config}/traefik.yml:/etc/traefik/traefik.yml"
       - "${traefik2_config}/letsencrypt:/letsencrypt"
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
-
     networks:
       - web
     restart: unless-stopped
