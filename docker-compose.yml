@@ -2,9 +2,9 @@ version: '3.5'
 
 secrets:
   transip_account:
-    file: /home/maarten/docker/container_config/traefik2/.secrets/transip_account.secret
+    file: ${traefik_secrets}/transip_account.secret
   transip_private_key:
-    file: /home/maarten/docker/container_config/traefik2/.secrets/transip_key.secret
+    file: ${traefik_secrets}/transip_key.secret
 
 services:
   hydra2:
