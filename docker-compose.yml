@@ -16,18 +16,14 @@ services:
     image: linuxserver/hydra2
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.hydra2.entrypoints=http"
+      - "traefik.http.middlewares.hydra2-redirect-websecure.redirectscheme.scheme=https"
+      - "traefik.http.routers.hydra2.middlewares=hydra2-redirect-websecure"
       - "traefik.http.routers.hydra2.rule=Host(`hydra2.maartenzuidland.nl`)"
-      - "traefik.http.routers.hydra2.entrypoints=web"
-      - "traefik.http.routers.hydra2.tls.certresolver=mydnschallenge"
-      - "traefik.http.middlewares.hydra2-https-redirect.redirectscheme.scheme=https"
-      - "traefik.http.routers.hydra2.middlewares=hydra2-https-redirect"
-      - "traefik.http.routers.hydra2-secure.entrypoints=websecure"
+      - "traefik.http.routers.hydra2.entrypoints=web"      
       - "traefik.http.routers.hydra2-secure.rule=Host(`hydra2.maartenzuidland.nl`)"
-      - "traefik.http.routers.hydra2-secure.tls=true"
       - "traefik.http.routers.hydra2-secure.tls.certresolver=mydnschallenge"
-      - "traefik.http.routers.hydra2-secure.service=hydra2"
-      - "traefik.http.services.hydra2.loadbalancer.server.port=5076" 
+      - "traefik.http.routers.hydra2-secure.tls=true"
+      - "traefik.http.routers.hydra2-secure.entrypoints=websecure"
     networks:
         - web
     ports:
@@ -45,18 +41,14 @@ services:
     image: linuxserver/nzbget
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.nzbget.entrypoints=http"
+      - "traefik.http.middlewares.nzbget-redirect-websecure.redirectscheme.scheme=https"
+      - "traefik.http.routers.nzbget.middlewares=nzbget-redirect-websecure"
       - "traefik.http.routers.nzbget.rule=Host(`nzbget.maartenzuidland.nl`)"
-      - "traefik.http.routers.nzbget.entrypoints=web"
-      - "traefik.http.routers.nzbget.tls.certresolver=mydnschallenge"
-      - "traefik.http.middlewares.nzbget-https-redirect.redirectscheme.scheme=https"
-      - "traefik.http.routers.nzbget.middlewares=nzbget-https-redirect"
-      - "traefik.http.routers.nzbget-secure.entrypoints=websecure"
+      - "traefik.http.routers.nzbget.entrypoints=web"      
       - "traefik.http.routers.nzbget-secure.rule=Host(`nzbget.maartenzuidland.nl`)"
-      - "traefik.http.routers.nzbget-secure.tls=true"
       - "traefik.http.routers.nzbget-secure.tls.certresolver=mydnschallenge"
-      - "traefik.http.routers.nzbget-secure.service=nzbget"
-      - "traefik.http.services.nzbget.loadbalancer.server.port=6789"    
+      - "traefik.http.routers.nzbget-secure.tls=true"
+      - "traefik.http.routers.nzbget-secure.entrypoints=websecure"
     networks:
         - web
     ports:
@@ -82,18 +74,14 @@ services:
     image: linuxserver/sonarr:preview
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.sonarr.entrypoints=http"
+      - "traefik.http.middlewares.sonarr-redirect-websecure.redirectscheme.scheme=https"
+      - "traefik.http.routers.sonarr.middlewares=sonarr-redirect-websecure"
       - "traefik.http.routers.sonarr.rule=Host(`sonarr.maartenzuidland.nl`)"
-      - "traefik.http.routers.sonarr.entrypoints=web"
-      - "traefik.http.routers.sonarr.tls.certresolver=mydnschallenge"
-      - "traefik.http.middlewares.sonarr-https-redirect.redirectscheme.scheme=https"
-      - "traefik.http.routers.sonarr.middlewares=sonarr-https-redirect"
-      - "traefik.http.routers.sonarr-secure.entrypoints=websecure"
+      - "traefik.http.routers.sonarr.entrypoints=web"      
       - "traefik.http.routers.sonarr-secure.rule=Host(`sonarr.maartenzuidland.nl`)"
-      - "traefik.http.routers.sonarr-secure.tls=true"
       - "traefik.http.routers.sonarr-secure.tls.certresolver=mydnschallenge"
-      - "traefik.http.routers.sonarr-secure.service=sonarr"
-      - "traefik.http.services.sonarr.loadbalancer.server.port=8989"
+      - "traefik.http.routers.sonarr-secure.tls=true"
+      - "traefik.http.routers.sonarr-secure.entrypoints=websecure"
     networks:
         - web
     ports:
@@ -119,18 +107,14 @@ services:
     image: linuxserver/radarr
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.radarr.entrypoints=http"
+      - "traefik.http.middlewares.radarr-redirect-websecure.redirectscheme.scheme=https"
+      - "traefik.http.routers.radarr.middlewares=radarr-redirect-websecure"
       - "traefik.http.routers.radarr.rule=Host(`radarr.maartenzuidland.nl`)"
-      - "traefik.http.routers.radarr.entrypoints=web"
-      - "traefik.http.routers.radarr.tls.certresolver=mydnschallenge"
-      - "traefik.http.middlewares.radarr-https-redirect.redirectscheme.scheme=https"
-      - "traefik.http.routers.radarr.middlewares=radarr-https-redirect"
-      - "traefik.http.routers.radarr-secure.entrypoints=websecure"
+      - "traefik.http.routers.radarr.entrypoints=web"      
       - "traefik.http.routers.radarr-secure.rule=Host(`radarr.maartenzuidland.nl`)"
-      - "traefik.http.routers.radarr-secure.tls=true"
       - "traefik.http.routers.radarr-secure.tls.certresolver=mydnschallenge"
-      - "traefik.http.routers.radarr-secure.service=radarr"
-      - "traefik.http.services.radarr.loadbalancer.server.port=7878"
+      - "traefik.http.routers.radarr-secure.tls=true"
+      - "traefik.http.routers.radarr-secure.entrypoints=websecure"
     networks:
         - web
     ports:
@@ -158,18 +142,14 @@ services:
     image: linuxserver/bazarr
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.bazarr.entrypoints=http"
+      - "traefik.http.middlewares.bazarr-redirect-websecure.redirectscheme.scheme=https"
+      - "traefik.http.routers.bazarr.middlewares=bazarr-redirect-websecure"
       - "traefik.http.routers.bazarr.rule=Host(`bazarr.maartenzuidland.nl`)"
-      - "traefik.http.routers.bazarr.entrypoints=web"
-      - "traefik.http.routers.bazarr.tls.certresolver=mydnschallenge"
-      - "traefik.http.middlewares.bazarr-https-redirect.redirectscheme.scheme=https"
-      - "traefik.http.routers.bazarr.middlewares=bazarr-https-redirect"
-      - "traefik.http.routers.bazarr-secure.entrypoints=websecure"
+      - "traefik.http.routers.bazarr.entrypoints=web"      
       - "traefik.http.routers.bazarr-secure.rule=Host(`bazarr.maartenzuidland.nl`)"
-      - "traefik.http.routers.bazarr-secure.tls=true"
       - "traefik.http.routers.bazarr-secure.tls.certresolver=mydnschallenge"
-      - "traefik.http.routers.bazarr-secure.service=bazarr"
-      - "traefik.http.services.bazarr.loadbalancer.server.port=6767"
+      - "traefik.http.routers.bazarr-secure.tls=true"
+      - "traefik.http.routers.bazarr-secure.entrypoints=websecure"
     networks:
       - web
     ports:
@@ -186,18 +166,14 @@ services:
     container_name: ombi
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.ombi.entrypoints=http"
+      - "traefik.http.middlewares.ombi-redirect-websecure.redirectscheme.scheme=https"
+      - "traefik.http.routers.ombi.middlewares=ombi-redirect-websecure"
       - "traefik.http.routers.ombi.rule=Host(`ombi.maartenzuidland.nl`)"
-      - "traefik.http.routers.ombi.entrypoints=web"
-      - "traefik.http.routers.ombi.tls.certresolver=mydnschallenge"
-      - "traefik.http.middlewares.ombi-https-redirect.redirectscheme.scheme=https"
-      - "traefik.http.routers.ombi.middlewares=ombi-https-redirect"
-      - "traefik.http.routers.ombi-secure.entrypoints=websecure"
+      - "traefik.http.routers.ombi.entrypoints=web"      
       - "traefik.http.routers.ombi-secure.rule=Host(`ombi.maartenzuidland.nl`)"
-      - "traefik.http.routers.ombi-secure.tls=true"
       - "traefik.http.routers.ombi-secure.tls.certresolver=mydnschallenge"
-      - "traefik.http.routers.ombi-secure.service=ombi"
-      - "traefik.http.services.ombi.loadbalancer.server.port=3579"
+      - "traefik.http.routers.ombi-secure.tls=true"
+      - "traefik.http.routers.ombi-secure.entrypoints=websecure"
     environment:
       PGID: ${PGID}
       PUID: ${PUID}
@@ -214,16 +190,14 @@ services:
     container_name: tautulli
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.tautulli.entrypoints=http"
+      - "traefik.http.middlewares.tautulli-redirect-websecure.redirectscheme.scheme=https"
+      - "traefik.http.routers.tautulli.middlewares=tautulli-redirect-websecure"
       - "traefik.http.routers.tautulli.rule=Host(`tautulli.maartenzuidland.nl`)"
-      - "traefik.http.routers.tautulli.entrypoints=web"
-      - "traefik.http.routers.tautulli.tls.certresolver=mydnschallenge"
-      - "traefik.http.middlewares.tautulli-https-redirect.redirectscheme.scheme=https"
-      - "traefik.http.routers.tautulli.middlewares=tautulli-https-redirect"
-      - "traefik.http.routers.tautulli-secure.entrypoints=websecure"
+      - "traefik.http.routers.tautulli.entrypoints=web"      
       - "traefik.http.routers.tautulli-secure.rule=Host(`tautulli.maartenzuidland.nl`)"
-      - "traefik.http.routers.tautulli-secure.tls=true"
       - "traefik.http.routers.tautulli-secure.tls.certresolver=mydnschallenge"
+      - "traefik.http.routers.tautulli-secure.tls=true"
+      - "traefik.http.routers.tautulli-secure.entrypoints=websecure"
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
