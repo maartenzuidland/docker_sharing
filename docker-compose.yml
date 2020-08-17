@@ -13,7 +13,7 @@ services:
       PGID: ${PGID}
       PUID: ${PUID}
       TZ: ${TZ}
-    image: linuxserver/hydra2
+    image: linuxserver/nzbhydra2
     labels:
       - "traefik.enable=true"
       - "traefik.http.middlewares.hydra2-redirect-websecure.redirectscheme.scheme=https"
@@ -109,9 +109,9 @@ services:
       - "traefik.enable=true"
       - "traefik.http.middlewares.radarr-redirect-websecure.redirectscheme.scheme=https"
       - "traefik.http.routers.radarr.middlewares=radarr-redirect-websecure"
-      - "traefik.http.routers.radarr.rule=Host(`radarr.maartenzuidland.nl`)"
+      - "traefik.http.routers.radarr.rule=Host(`tv.maartenzuidland.nl`)"
       - "traefik.http.routers.radarr.entrypoints=web"      
-      - "traefik.http.routers.radarr-secure.rule=Host(`radarr.maartenzuidland.nl`)"
+      - "traefik.http.routers.radarr-secure.rule=Host(`tv.maartenzuidland.nl`)"
       - "traefik.http.routers.radarr-secure.tls.certresolver=mydnschallenge"
       - "traefik.http.routers.radarr-secure.tls=true"
       - "traefik.http.routers.radarr-secure.entrypoints=websecure"
@@ -209,10 +209,10 @@ services:
       - ${plex_logs}:/logs
     ports:
       - 8181:8181
-    restart: unless-stopped
-  
+    restart: unless-stopped    
+
   traefik2:
-    image: "traefik:v2.1"
+    image: "traefik:v2.2"
     container_name: "traefik2"
     labels:
       - "traefik.http.routers.traefik.tls=true"
@@ -233,6 +233,7 @@ services:
     volumes:
       - "${traefik2_config}/traefik.yml:/etc/traefik/traefik.yml"
       - "${traefik2_config}/letsencrypt:/letsencrypt"
+      - "${traefik2_config}/access_logs:/access_logs"
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
     networks:
       - web
@@ -240,5 +241,5 @@ services:
 
 networks:
     web:
-        driver: bridge
-        name: web
+      driver: bridge
+      name: web
