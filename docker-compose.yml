@@ -1,29 +1,13 @@
 version: '3.5'
 
-secrets:
-  transip_account:
-    file: ${traefik_secrets}/transip_account.secret
-  transip_private_key:
-    file: ${traefik_secrets}/transip_key.secret
-
 services:
-  hydra2:
-    container_name: hydra2
+  nzbhydra2:
+    container_name: nzbhydra2
     environment:
       PGID: ${PGID}
       PUID: ${PUID}
       TZ: ${TZ}
-    image: linuxserver/nzbhydra2
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.middlewares.hydra2-redirect-websecure.redirectscheme.scheme=https"
-      - "traefik.http.routers.hydra2.middlewares=hydra2-redirect-websecure"
-      - "traefik.http.routers.hydra2.rule=Host(`hydra2.maartenzuidland.nl`)"
-      - "traefik.http.routers.hydra2.entrypoints=web"      
-      - "traefik.http.routers.hydra2-secure.rule=Host(`hydra2.maartenzuidland.nl`)"
-      - "traefik.http.routers.hydra2-secure.tls.certresolver=mydnschallenge"
-      - "traefik.http.routers.hydra2-secure.tls=true"
-      - "traefik.http.routers.hydra2-secure.entrypoints=websecure"
+    image: ghcr.io/linuxserver/nzbhydra2
     networks:
         - web
     ports:
@@ -32,56 +16,36 @@ services:
     volumes:
       - '${hydra_config}:/config'
       - '${downloads}:/downloads'
-  nzbget:
-    container_name: nzbget
+  sabnzbd:
+    image: ghcr.io/linuxserver/sabnzbd
+    container_name: sabnzbd
     environment:
       PGID: ${PGID}
       PUID: ${PUID}
       TZ: ${TZ}
-    image: linuxserver/nzbget
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.middlewares.nzbget-redirect-websecure.redirectscheme.scheme=https"
-      - "traefik.http.routers.nzbget.middlewares=nzbget-redirect-websecure"
-      - "traefik.http.routers.nzbget.rule=Host(`nzbget.maartenzuidland.nl`)"
-      - "traefik.http.routers.nzbget.entrypoints=web"      
-      - "traefik.http.routers.nzbget-secure.rule=Host(`nzbget.maartenzuidland.nl`)"
-      - "traefik.http.routers.nzbget-secure.tls.certresolver=mydnschallenge"
-      - "traefik.http.routers.nzbget-secure.tls=true"
-      - "traefik.http.routers.nzbget-secure.entrypoints=websecure"
-    networks:
-        - web
-    ports:
-      - '6788:6789'
-    restart: unless-stopped
     volumes:
-      - '${nzbget_config}:/config'
+      - ${sabnzbd_config}:/config
       - '${downloads}:/downloads'
-      - '${main_drive}:/Volumes/My Book'
-
+      - ${downloads}/intermediate:/incomplete-downloads #optional
+    ports:
+      - 8084:8080
+      - 9094:9090
+    restart: unless-stopped
+    networks:
+      - web
   sonarr:
     container_name: sonarr
     depends_on:
-      - hydra2
-      - nzbget
+      - nzbhydra2
+      - sabnzbd
     links:
-      - hydra2
-      - nzbget
+      - nzbhydra2
+      - sabnzbd
     environment:
       PGID: ${PGID}
       PUID: ${PUID}
       TZ: ${TZ}
-    image: linuxserver/sonarr:preview
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.middlewares.sonarr-redirect-websecure.redirectscheme.scheme=https"
-      - "traefik.http.routers.sonarr.middlewares=sonarr-redirect-websecure"
-      - "traefik.http.routers.sonarr.rule=Host(`sonarr.maartenzuidland.nl`)"
-      - "traefik.http.routers.sonarr.entrypoints=web"      
-      - "traefik.http.routers.sonarr-secure.rule=Host(`sonarr.maartenzuidland.nl`)"
-      - "traefik.http.routers.sonarr-secure.tls.certresolver=mydnschallenge"
-      - "traefik.http.routers.sonarr-secure.tls=true"
-      - "traefik.http.routers.sonarr-secure.entrypoints=websecure"
+    image: ghcr.io/linuxserver/sonarr:preview
     networks:
         - web
     ports:
@@ -95,26 +59,16 @@ services:
   radarr:
     container_name: radarr
     depends_on:
-      - hydra2
-      - nzbget
+      - nzbhydra2
+      - sabnzbd
     links:
-      - hydra2
-      - nzbget
+      - nzbhydra2
+      - sabnzbd
     environment:
       PGID: ${PGID}
       PUID: ${PUID}
       TZ: ${TZ}
-    image: linuxserver/radarr
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.middlewares.radarr-redirect-websecure.redirectscheme.scheme=https"
-      - "traefik.http.routers.radarr.middlewares=radarr-redirect-websecure"
-      - "traefik.http.routers.radarr.rule=Host(`tv.maartenzuidland.nl`)"
-      - "traefik.http.routers.radarr.entrypoints=web"      
-      - "traefik.http.routers.radarr-secure.rule=Host(`tv.maartenzuidland.nl`)"
-      - "traefik.http.routers.radarr-secure.tls.certresolver=mydnschallenge"
-      - "traefik.http.routers.radarr-secure.tls=true"
-      - "traefik.http.routers.radarr-secure.entrypoints=websecure"
+    image: ghcr.io/linuxserver/radarr
     networks:
         - web
     ports:
@@ -130,26 +84,14 @@ services:
     depends_on:
       - radarr
       - sonarr
-      - nzbget
     links:
       - radarr
       - sonarr
-      - nzbget
     environment:
       PUID: ${PUID}
       PGID: ${PGID}
       TZ: ${TZ} 
-    image: linuxserver/bazarr
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.middlewares.bazarr-redirect-websecure.redirectscheme.scheme=https"
-      - "traefik.http.routers.bazarr.middlewares=bazarr-redirect-websecure"
-      - "traefik.http.routers.bazarr.rule=Host(`bazarr.maartenzuidland.nl`)"
-      - "traefik.http.routers.bazarr.entrypoints=web"      
-      - "traefik.http.routers.bazarr-secure.rule=Host(`bazarr.maartenzuidland.nl`)"
-      - "traefik.http.routers.bazarr-secure.tls.certresolver=mydnschallenge"
-      - "traefik.http.routers.bazarr-secure.tls=true"
-      - "traefik.http.routers.bazarr-secure.entrypoints=websecure"
+    image: ghcr.io/linuxserver/bazarr
     networks:
       - web
     ports:
@@ -160,20 +102,9 @@ services:
       - '${movies}:/movies'
       - '${tv}:/tv'
       - '${main_drive}:/Volumes/My Book'
-
   ombi:
-    image: linuxserver/ombi
+    image: ghcr.io/linuxserver/ombi
     container_name: ombi
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.middlewares.ombi-redirect-websecure.redirectscheme.scheme=https"
-      - "traefik.http.routers.ombi.middlewares=ombi-redirect-websecure"
-      - "traefik.http.routers.ombi.rule=Host(`ombi.maartenzuidland.nl`)"
-      - "traefik.http.routers.ombi.entrypoints=web"      
-      - "traefik.http.routers.ombi-secure.rule=Host(`ombi.maartenzuidland.nl`)"
-      - "traefik.http.routers.ombi-secure.tls.certresolver=mydnschallenge"
-      - "traefik.http.routers.ombi-secure.tls=true"
-      - "traefik.http.routers.ombi-secure.entrypoints=websecure"
     environment:
       PGID: ${PGID}
       PUID: ${PUID}
@@ -186,18 +117,8 @@ services:
       - 3579:3579
     restart: unless-stopped
   tautulli:
-    image: linuxserver/tautulli
+    image: ghcr.io/linuxserver/tautulli
     container_name: tautulli
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.middlewares.tautulli-redirect-websecure.redirectscheme.scheme=https"
-      - "traefik.http.routers.tautulli.middlewares=tautulli-redirect-websecure"
-      - "traefik.http.routers.tautulli.rule=Host(`tautulli.maartenzuidland.nl`)"
-      - "traefik.http.routers.tautulli.entrypoints=web"      
-      - "traefik.http.routers.tautulli-secure.rule=Host(`tautulli.maartenzuidland.nl`)"
-      - "traefik.http.routers.tautulli-secure.tls.certresolver=mydnschallenge"
-      - "traefik.http.routers.tautulli-secure.tls=true"
-      - "traefik.http.routers.tautulli-secure.entrypoints=websecure"
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -210,36 +131,45 @@ services:
     ports:
       - 8181:8181
     restart: unless-stopped    
-
-  traefik2:
-    image: "traefik:v2.2"
-    container_name: "traefik2"
-    labels:
-      - "traefik.http.routers.traefik.tls=true"
-      - "traefik.http.routers.traefik.tls.certresolver=mydnschallenge"
-      - "traefik.http.routers.traefik.tls.domains[0].main=maartenzuidland.nl"
-      - "traefik.http.routers.traefik.tls.domains[0].sans=*.maartenzuidland.nl"
-      - "traefik.http.routers.traefik.service=api@internal"
-    ports:
-      - "80:80"
-      - "443:443"
-      - "8080:8080"
-    secrets:
-      - "transip_account"
-      - "transip_private_key"
+  swag:
+    image: ghcr.io/linuxserver/swag
+    container_name: swag
+    cap_add:
+      - NET_ADMIN
     environment:
-      - "TRANSIP_ACCOUNT_NAME_FILE=/run/secrets/transip_account"
-      - "TRANSIP_PRIVATE_KEY_PATH=/run/secrets/transip_private_key"
-    volumes:
-      - "${traefik2_config}/traefik.yml:/etc/traefik/traefik.yml"
-      - "${traefik2_config}/letsencrypt:/letsencrypt"
-      - "${traefik2_config}/access_logs:/access_logs"
-      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - PGID=${PGID}
+      - PUID=${PUID}
+      - TZ=${TZ}
+      - URL=maartenzuidland.nl
+      - SUBDOMAINS=wildcard
+      - VALIDATION=dns
+      - DNSPLUGIN=transip
+      - EMAIL=maarten.zuidland@gmail.com
+      - MAXMINDB_LICENSE_KEY=23GEPwofPQylV13w
     networks:
       - web
+    volumes:
+      - ${swag_config}:/config
+    ports:
+      - 443:443
+      - 80:80
     restart: unless-stopped
 
 networks:
     web:
       driver: bridge
       name: web
+
+secrets:
+  nextcloud_admin_password:
+    file: ./nextcloud_admin_password # put admin password to this file
+  nextcloud_admin_user:
+    file: ./nextcloud_admin_user # put admin username to this file
+  mysql_db:
+    file: ./mysql_db # put mysql db name to this file
+  mysql_password:
+    file: ./mysql_password # put mysql password to this file
+  mysql_user:
+    file: ./mysql_user # put mysql username to this file
+  mysql_root_password:
+    file: ./mysql_root_password # put mysql username to this file
